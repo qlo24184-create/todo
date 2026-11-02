@@ -268,7 +268,7 @@ if st.session_state.quota_date != today:
 # -----------------------------
 # 頂部導覽：語系快速切換 + 無障礙入口
 # -----------------------------
-top1, top2, top3 = st.columns([5, 1.4, 1.8])
+top1, top2, top3 = st.columns([2.2, 1.0, 3.8])
 with top1:
     st.markdown("## 🌊 花蓮旅遊網")
 with top2:
@@ -279,18 +279,32 @@ with top2:
         label_visibility="collapsed"
     )
 with top3:
-    with st.popover("♿ 無障礙設定"):
-        st.session_state.font_scale = st.radio(
-            "文字大小",
-            ["一般", "放大", "特大"],
-            index=["一般", "放大", "特大"].index(st.session_state.font_scale)
-        )
-        st.session_state.high_contrast = st.toggle(
-            "高對比模式", value=st.session_state.high_contrast
-        )
+    st.markdown("**字體大小**")
+    st.session_state.font_scale = st.radio(
+        "字體大小",
+        ["一般字", "大字", "特大字"],
+        index=["一般字", "大字", "特大字"].index(
+            st.session_state.get("font_scale", "一般字")
+            if st.session_state.get("font_scale", "一般字") in ["一般字", "大字", "特大字"]
+            else "一般字"
+        ),
+        horizontal=True,
+        label_visibility="collapsed"
+    )
 
 lang = TEXT[st.session_state.language]
-font_css = {"一般": "1rem", "放大": "1.15rem", "特大": "1.3rem"}[st.session_state.font_scale]
+
+def color_section(title, subtitle, color, text_color="#243447"):
+    st.markdown(
+        f"""<div style="background:{color};border-left:8px solid {text_color};
+        border-radius:12px;padding:14px 18px;margin:14px 0 10px 0;">
+        <div style="font-size:1.25em;font-weight:750;color:{text_color};">{title}</div>
+        <div style="font-size:0.9em;line-height:1.5;color:{text_color};">{subtitle}</div>
+        </div>""",
+        unsafe_allow_html=True
+    )
+
+font_css = {"一般字": "18px", "大字": "22px", "特大字": "26px"}[st.session_state.font_scale]
 if st.session_state.high_contrast:
     st.markdown(
         f"""<style>
@@ -303,13 +317,35 @@ if st.session_state.high_contrast:
             color: #ffffff !important;
         }}
         [data-testid="stHeader"] {{background: #000000 !important;}}
-        </style>""",
-        unsafe_allow_html=True
+        [data-testid="stMarkdownContainer"] p,
+        [data-testid="stWidgetLabel"] p,
+        [data-testid="stCaptionContainer"] {{
+            font-size: {font_css} !important; line-height: 1.7 !important;
+        }}
+        .stButton button, [data-testid="stFormSubmitButton"] button {{
+            min-height: 48px; font-size: {font_css} !important; font-weight: 700;
+        }}
+        </style>""", unsafe_allow_html=True
     )
 else:
     st.markdown(
-        f"<style>html, body, [data-testid='stAppViewContainer'] {{font-size:{font_css};}}</style>",
-        unsafe_allow_html=True
+        f"""<style>
+        html, body, [data-testid="stAppViewContainer"] {{font-size: {font_css} !important;}}
+        [data-testid="stMarkdownContainer"] p,
+        [data-testid="stWidgetLabel"] p,
+        [data-testid="stCaptionContainer"] {{
+            font-size: {font_css} !important; line-height: 1.7 !important;
+        }}
+        input, textarea, [data-baseweb="select"] {{font-size: {font_css} !important;}}
+        .stButton button, [data-testid="stFormSubmitButton"] button {{
+            min-height: 48px; font-size: {font_css} !important; font-weight: 700;
+        }}
+        </style>""", unsafe_allow_html=True
+    )
+
+with st.popover("♿ 顯示輔助設定"):
+    st.session_state.high_contrast = st.toggle(
+        "高對比模式", value=st.session_state.high_contrast
     )
 
 st.caption(lang["nav"])
@@ -336,38 +372,9 @@ with hero_right:
 # -----------------------------
 # 熱門服務：置於首屏下方
 # -----------------------------
+color_section("🧭 熱門旅遊服務", "票券、推薦行程、AI 客服與季節活動", "#DCEEFF", "#164A72")
 st.subheader(lang["popular"])
-# 依月份切換季節活動內容（示範資料，正式上線需串接官方公告）
-month = date.today().month
-if month in (3, 4, 5):
-    current_season = "春季"
-    seasonal_activities = [
-        ("賞螢生態體驗", "春季限定", "依生態環境及場域公告開放，建議事先確認場次與預約方式。"),
-        ("春日花海與農村慢遊", "花況限定", "依花況及農事時程安排，出發前確認活動日期。")
-    ]
-elif month in (6, 7, 8):
-    current_season = "夏季"
-    seasonal_activities = [
-        ("賞鯨與海洋體驗", "夏季熱門", "受海象及天候影響，請向業者確認出航與預約資訊。"),
-        ("溪谷親水活動", "夏季限定", "留意天氣、溪流水位及安全公告，勿前往公告禁止區域。")
-    ]
-elif month in (9, 10, 11):
-    current_season = "秋季"
-    seasonal_activities = [
-        ("縱谷稻田與農村慢遊", "秋季風景", "依作物生長及收成時程欣賞田園景觀。"),
-        ("部落文化與地方體驗", "地方活動", "依主辦單位公告確認活動日期及報名方式。")
-    ]
-else:
-    current_season = "冬季"
-    seasonal_activities = [
-        ("溫泉暖冬之旅", "冬季限定", "可規劃瑞穗、安通等溫泉區，請先確認營業及預約資訊。"),
-        ("冬季山海景觀慢遊", "四季皆宜", "依天候與道路狀況安排，出發前確認交通及景點開放資訊。")
-    ]
-
-if "seasonal_notice_read" not in st.session_state:
-    st.session_state.seasonal_notice_read = False
-
-svc1, svc2, svc3, svc4 = st.columns(4)
+svc1, svc2, svc3 = st.columns(3)
 with svc1:
     st.markdown("### 🎟️ " + lang["tickets"])
     st.write(lang["tickets_desc"])
@@ -380,51 +387,13 @@ with svc3:
     st.markdown("### 🤖 " + lang["assistant"])
     st.write(lang["assistant_desc"])
     st.caption("展示入口：旅遊問答與額度管理")
-with svc4:
-    st.markdown("### 🌸 季節限定活動")
-    st.write("依花蓮四季特色，探索當季限定體驗與節慶活動。")
-    st.caption("春賞螢、夏海洋、秋縱谷、冬溫泉")
-    with st.popover("查看當季活動"):
-        st.markdown(f"**{current_season}活動推薦**")
-        for activity_name, tag, description in seasonal_activities:
-            st.markdown(f"**{activity_name}** · {tag}")
-            st.caption(description)
-
-# 網站內通知中心：進站即可查看，不會傳送至瀏覽器或 LINE
-st.divider()
-notice_col1, notice_col2 = st.columns([4, 1])
-with notice_col1:
-    st.subheader("🔔 當季限定活動通知")
-    st.caption(f"花蓮 {current_season}活動資訊｜網站內通知")
-with notice_col2:
-    if not st.session_state.seasonal_notice_read:
-        st.metric("未讀通知", "2 則")
-    else:
-        st.metric("未讀通知", "0 則")
-
-with st.container(border=True):
-    if not st.session_state.seasonal_notice_read:
-        st.markdown(f"🟢 **{current_season}限定活動上架提醒**")
-    else:
-        st.markdown(f"**{current_season}限定活動資訊**")
-    for activity_name, tag, description in seasonal_activities:
-        st.markdown(f"**{activity_name}**　`{tag}`")
-        st.caption(description)
-    st.caption("提醒：目前為展示用通知內容，實際活動日期、名額、報名連結及是否成團，請以主辦單位最新公告為準。")
-    if not st.session_state.seasonal_notice_read:
-        if st.button("✓ 標示為已讀", key="mark_seasonal_read"):
-            st.session_state.seasonal_notice_read = True
-            st.rerun()
-    else:
-        if st.button("重新查看未讀提醒", key="reset_seasonal_read"):
-            st.session_state.seasonal_notice_read = False
-            st.rerun()
 
 st.divider()
 
 # -----------------------------
 # 景點搜尋與分類
 # -----------------------------
+color_section("🔎 景點探索", "依地區、類型與關鍵字尋找花蓮景點", "#DDF3E4", "#205D37")
 st.subheader("🔎 " + lang["attractions"])
 filter1, filter2 = st.columns(2)
 with filter1:
@@ -469,6 +438,7 @@ st.divider()
 # -----------------------------
 # 行程推薦（示範規則）
 # -----------------------------
+color_section("🗺️ 推薦行程", "依旅遊天數安排花蓮一至三日遊", "#FFE8C9", "#80501B")
 st.subheader("🧭 " + lang["itinerary"])
 days = st.radio(lang["days"], [1, 2, 3], horizontal=True, format_func=lambda x: f"{x} 天")
 if st.button(lang["recommend"], use_container_width=True):
@@ -488,6 +458,7 @@ st.divider()
 # -----------------------------
 # AI 客服：額度顯示、預警、用完提示
 # -----------------------------
+color_section("🤖 AI 旅遊小助理", "旅遊問答與每日使用額度", "#E9E0FF", "#503B80")
 st.subheader("🤖 " + lang["assistant"])
 st.caption(lang["assistant_desc"])
 remaining = max(0, DAILY_LIMIT - st.session_state.chat_count)
@@ -520,6 +491,7 @@ checklist = data["hualien_trip_checklist"]
 categories = checklist["categories"]
 trip_info = checklist["trip_info"]
 
+color_section("🧳 旅行待辦事項", "旅遊日期、人數、客房需求與行前準備", "#E3EAF0", "#34495E")
 st.subheader("🧳 " + lang["trip_list"])
 st.markdown("#### " + lang["basic"])
 
